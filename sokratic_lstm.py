@@ -109,33 +109,18 @@ for i in range(0,n_samples):
 def normalize(x):
     return np.true_divide(np.array(x),9)
 
-
-
-#print(X)
-#X = normalize(X)
-
 print(X)
-
-#Y = to_categorical(Y,  num_classes=20)
-
-#Y = create_table(Y)
 Y = to_categorical(Y,  num_classes=max_count)
 print(Y)
 
 x = np.zeros((len(X), input_size, len(chars)), dtype=np.bool)
 y = Y
-#y = np.zeros((len(Y), max_count, len(chars)), dtype=np.bool)
 
 for i, sentence in enumerate(X):
     x[i] = table_input.encode(sentence, input_size)
-#for i, sentence in enumerate(Y):
-#    y[i] = table_output.encode(sentence, max_count)
 
 print(x.shape)
 split_at_train_test = len(X) - len(Y) // 20
-#(x_train, x_test) = x[:split_at_train_test], x[split_at_train_test :]
-
-#(y_train, y_test) = y[:split_at_train_test], y[split_at_train_test :]
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=43,shuffle=True)
 
@@ -183,27 +168,12 @@ print(x.shape)
 print('Build model...')
 optimizer = SGD(lr=0.01, momentum=0.9, nesterov=True, clipvalue=1.)
 model = Sequential()
-# "Encode" the input sequence using an RNN, producing an output of HIDDEN_SIZE.
-# Note: In a situation where your input sequences have a variable length,
-# use input_shape=(None, num_feature).
-#model.add(Embedding(input_size, embedding_vecor_length, input_length=max_int))
 model.add(RNN(HIDDEN_SIZE, input_shape=(input_size, len(chars))))
-# As the decoder RNN's input, repeatedly provide with the last output of
-# RNN for each time step. Repeat 'DIGITS + 1' times as that's the maximum
-# length of output, e.g., when DIGITS=3, max output is 999+999=1998.
 model.add(RepeatVector(max_count))
-# The decoder RNN could be multiple layers stacked or a single layer.
 for _ in range(LAYERS):
-    # By setting return_sequences to True, return not only the last output but
-    # all the outputs so far in the form of (num_samples, timesteps,
-    # output_dim). This is necessary as TimeDistributed in the below expects
-    # the first dimension to be the timesteps.
     model.add(RNN(HIDDEN_SIZE, return_sequences=True))
 model.add(Flatten())
 
-# Apply a dense layer to the every temporal slice of an input. For each of step
-# of the output sequence, decide which character should be chosen.
-#model.add(TimeDistributed(Dense(20, activation='softmax')))
 model.add(Dense(max_count, activation='softmax'))
 model.compile(loss='categorical_crossentropy',
               optimizer=optimizer,
